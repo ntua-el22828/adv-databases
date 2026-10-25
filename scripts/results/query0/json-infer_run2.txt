@@ -1,0 +1,135 @@
+TIME_ELAPSED = 23.95010791900131
+Year: 2005, Avg Stars: 3.900468
+Year: 2006, Avg Stars: 3.995069
+Year: 2007, Avg Stars: 3.864415
+Year: 2008, Avg Stars: 3.798864
+Year: 2009, Avg Stars: 3.719454
+Year: 2010, Avg Stars: 3.721475
+Year: 2011, Avg Stars: 3.704631
+Year: 2012, Avg Stars: 3.678843
+Year: 2013, Avg Stars: 3.683644
+Year: 2014, Avg Stars: 3.722964
+Year: 2015, Avg Stars: 3.741978
+Year: 2016, Avg Stars: 3.765537
+Year: 2017, Avg Stars: 3.778584
+Year: 2018, Avg Stars: 3.781084
+Year: 2019, Avg Stars: 3.766577
+Year: 2020, Avg Stars: 3.782641
+Year: 2021, Avg Stars: 3.704734
+Year: 2022, Avg Stars: 3.704500
+== Physical Plan ==
+AdaptiveSparkPlan (19)
++- == Final Plan ==
+   ResultQueryStage (12)
+   +- * Sort (11)
+      +- AQEShuffleRead (10), coalesced
+         +- ShuffleQueryStage (9), Statistics(sizeInBytes=432.0 B, rowCount=18)
+            +- Exchange (8)
+               +- * HashAggregate (7)
+                  +- AQEShuffleRead (6), coalesced
+                     +- ShuffleQueryStage (5), Statistics(sizeInBytes=21.0 KiB, rowCount=671)
+                        +- Exchange (4)
+                           +- * HashAggregate (3)
+                              +- * Project (2)
+                                 +- Scan json  (1)
++- == Initial Plan ==
+   Sort (18)
+   +- Exchange (17)
+      +- HashAggregate (16)
+         +- Exchange (15)
+            +- HashAggregate (14)
+               +- Project (13)
+                  +- Scan json  (1)
+
+
+(1) Scan json 
+Output [2]: [date#8, stars#11]
+Batched: false
+Location: InMemoryFileIndex [file:/home/nickz/adv_db/raw/yelp_json/yelp_academic_dataset_review.json]
+ReadSchema: struct<date:string,stars:double>
+
+(2) Project [codegen id : 1]
+Output [2]: [stars#11, year(cast(date#8 as date)) AS year#16]
+Input [2]: [date#8, stars#11]
+
+(3) HashAggregate [codegen id : 1]
+Input [2]: [stars#11, year#16]
+Keys [1]: [year#16]
+Functions [1]: [partial_avg(stars#11)]
+Aggregate Attributes [2]: [sum#29, count#30L]
+Results [3]: [year#16, sum#31, count#32L]
+
+(4) Exchange
+Input [3]: [year#16, sum#31, count#32L]
+Arguments: hashpartitioning(year#16, 200), ENSURE_REQUIREMENTS, [plan_id=40]
+
+(5) ShuffleQueryStage
+Output [3]: [year#16, sum#31, count#32L]
+Arguments: 0
+
+(6) AQEShuffleRead
+Input [3]: [year#16, sum#31, count#32L]
+Arguments: coalesced
+
+(7) HashAggregate [codegen id : 2]
+Input [3]: [year#16, sum#31, count#32L]
+Keys [1]: [year#16]
+Functions [1]: [avg(stars#11)]
+Aggregate Attributes [1]: [avg(stars#11)#28]
+Results [2]: [year#16, avg(stars#11)#28 AS avg_stars#17]
+
+(8) Exchange
+Input [2]: [year#16, avg_stars#17]
+Arguments: rangepartitioning(year#16 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [plan_id=69]
+
+(9) ShuffleQueryStage
+Output [2]: [year#16, avg_stars#17]
+Arguments: 1
+
+(10) AQEShuffleRead
+Input [2]: [year#16, avg_stars#17]
+Arguments: coalesced
+
+(11) Sort [codegen id : 3]
+Input [2]: [year#16, avg_stars#17]
+Arguments: [year#16 ASC NULLS FIRST], true, 0
+
+(12) ResultQueryStage
+Output [2]: [year#16, avg_stars#17]
+Arguments: 2
+
+(13) Project
+Output [2]: [stars#11, year(cast(date#8 as date)) AS year#16]
+Input [2]: [date#8, stars#11]
+
+(14) HashAggregate
+Input [2]: [stars#11, year#16]
+Keys [1]: [year#16]
+Functions [1]: [partial_avg(stars#11)]
+Aggregate Attributes [2]: [sum#29, count#30L]
+Results [3]: [year#16, sum#31, count#32L]
+
+(15) Exchange
+Input [3]: [year#16, sum#31, count#32L]
+Arguments: hashpartitioning(year#16, 200), ENSURE_REQUIREMENTS, [plan_id=20]
+
+(16) HashAggregate
+Input [3]: [year#16, sum#31, count#32L]
+Keys [1]: [year#16]
+Functions [1]: [avg(stars#11)]
+Aggregate Attributes [1]: [avg(stars#11)#28]
+Results [2]: [year#16, avg(stars#11)#28 AS avg_stars#17]
+
+(17) Exchange
+Input [2]: [year#16, avg_stars#17]
+Arguments: rangepartitioning(year#16 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [plan_id=23]
+
+(18) Sort
+Input [2]: [year#16, avg_stars#17]
+Arguments: [year#16 ASC NULLS FIRST], true, 0
+
+(19) AdaptiveSparkPlan
+Output [2]: [year#16, avg_stars#17]
+Arguments: isFinalPlan=true
+
+

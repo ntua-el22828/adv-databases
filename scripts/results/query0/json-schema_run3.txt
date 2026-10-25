@@ -1,0 +1,135 @@
+TIME_ELAPSED = 18.82427627600191
+Year: 2005, Avg Stars: 3.900468
+Year: 2006, Avg Stars: 3.995069
+Year: 2007, Avg Stars: 3.864415
+Year: 2008, Avg Stars: 3.798864
+Year: 2009, Avg Stars: 3.719454
+Year: 2010, Avg Stars: 3.721475
+Year: 2011, Avg Stars: 3.704631
+Year: 2012, Avg Stars: 3.678843
+Year: 2013, Avg Stars: 3.683644
+Year: 2014, Avg Stars: 3.722964
+Year: 2015, Avg Stars: 3.741978
+Year: 2016, Avg Stars: 3.765537
+Year: 2017, Avg Stars: 3.778584
+Year: 2018, Avg Stars: 3.781084
+Year: 2019, Avg Stars: 3.766577
+Year: 2020, Avg Stars: 3.782641
+Year: 2021, Avg Stars: 3.704734
+Year: 2022, Avg Stars: 3.704500
+== Physical Plan ==
+AdaptiveSparkPlan (19)
++- == Final Plan ==
+   ResultQueryStage (12)
+   +- * Sort (11)
+      +- AQEShuffleRead (10), coalesced
+         +- ShuffleQueryStage (9), Statistics(sizeInBytes=432.0 B, rowCount=18)
+            +- Exchange (8)
+               +- * HashAggregate (7)
+                  +- AQEShuffleRead (6), coalesced
+                     +- ShuffleQueryStage (5), Statistics(sizeInBytes=21.0 KiB, rowCount=671)
+                        +- Exchange (4)
+                           +- * HashAggregate (3)
+                              +- * Project (2)
+                                 +- Scan json  (1)
++- == Initial Plan ==
+   Sort (18)
+   +- Exchange (17)
+      +- HashAggregate (16)
+         +- Exchange (15)
+            +- HashAggregate (14)
+               +- Project (13)
+                  +- Scan json  (1)
+
+
+(1) Scan json 
+Output [2]: [stars#3, date#8]
+Batched: false
+Location: InMemoryFileIndex [file:/home/nickz/adv_db/raw/yelp_json/yelp_academic_dataset_review.json]
+ReadSchema: struct<stars:double,date:string>
+
+(2) Project [codegen id : 1]
+Output [2]: [stars#3, year(cast(date#8 as date)) AS year#10]
+Input [2]: [stars#3, date#8]
+
+(3) HashAggregate [codegen id : 1]
+Input [2]: [stars#3, year#10]
+Keys [1]: [year#10]
+Functions [1]: [partial_avg(stars#3)]
+Aggregate Attributes [2]: [sum#23, count#24L]
+Results [3]: [year#10, sum#25, count#26L]
+
+(4) Exchange
+Input [3]: [year#10, sum#25, count#26L]
+Arguments: hashpartitioning(year#10, 200), ENSURE_REQUIREMENTS, [plan_id=37]
+
+(5) ShuffleQueryStage
+Output [3]: [year#10, sum#25, count#26L]
+Arguments: 0
+
+(6) AQEShuffleRead
+Input [3]: [year#10, sum#25, count#26L]
+Arguments: coalesced
+
+(7) HashAggregate [codegen id : 2]
+Input [3]: [year#10, sum#25, count#26L]
+Keys [1]: [year#10]
+Functions [1]: [avg(stars#3)]
+Aggregate Attributes [1]: [avg(stars#3)#22]
+Results [2]: [year#10, avg(stars#3)#22 AS avg_stars#11]
+
+(8) Exchange
+Input [2]: [year#10, avg_stars#11]
+Arguments: rangepartitioning(year#10 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [plan_id=66]
+
+(9) ShuffleQueryStage
+Output [2]: [year#10, avg_stars#11]
+Arguments: 1
+
+(10) AQEShuffleRead
+Input [2]: [year#10, avg_stars#11]
+Arguments: coalesced
+
+(11) Sort [codegen id : 3]
+Input [2]: [year#10, avg_stars#11]
+Arguments: [year#10 ASC NULLS FIRST], true, 0
+
+(12) ResultQueryStage
+Output [2]: [year#10, avg_stars#11]
+Arguments: 2
+
+(13) Project
+Output [2]: [stars#3, year(cast(date#8 as date)) AS year#10]
+Input [2]: [stars#3, date#8]
+
+(14) HashAggregate
+Input [2]: [stars#3, year#10]
+Keys [1]: [year#10]
+Functions [1]: [partial_avg(stars#3)]
+Aggregate Attributes [2]: [sum#23, count#24L]
+Results [3]: [year#10, sum#25, count#26L]
+
+(15) Exchange
+Input [3]: [year#10, sum#25, count#26L]
+Arguments: hashpartitioning(year#10, 200), ENSURE_REQUIREMENTS, [plan_id=17]
+
+(16) HashAggregate
+Input [3]: [year#10, sum#25, count#26L]
+Keys [1]: [year#10]
+Functions [1]: [avg(stars#3)]
+Aggregate Attributes [1]: [avg(stars#3)#22]
+Results [2]: [year#10, avg(stars#3)#22 AS avg_stars#11]
+
+(17) Exchange
+Input [2]: [year#10, avg_stars#11]
+Arguments: rangepartitioning(year#10 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [plan_id=20]
+
+(18) Sort
+Input [2]: [year#10, avg_stars#11]
+Arguments: [year#10 ASC NULLS FIRST], true, 0
+
+(19) AdaptiveSparkPlan
+Output [2]: [year#10, avg_stars#11]
+Arguments: isFinalPlan=true
+
+

@@ -1,0 +1,58 @@
+== Physical Plan ==
+AdaptiveSparkPlan (9)
++- Sort (8)
+   +- Exchange (7)
+      +- HashAggregate (6)
+         +- Exchange (5)
+            +- HashAggregate (4)
+               +- Project (3)
+                  +- Filter (2)
+                     +- Scan json  (1)
+
+
+(1) Scan json 
+Output [2]: [stars#3, date#8]
+Batched: false
+Location: InMemoryFileIndex [file:/home/nickz/adv_db/raw/yelp_json/yelp_academic_dataset_review.json]
+PushedFilters: [IsNotNull(date), IsNotNull(stars), GreaterThanOrEqual(stars,3.0)]
+ReadSchema: struct<stars:double,date:string>
+
+(2) Filter
+Input [2]: [stars#3, date#8]
+Condition : (((isnotnull(date#8) AND isnotnull(stars#3)) AND (year(cast(date#8 as date)) >= 2015)) AND (stars#3 >= 3.0))
+
+(3) Project
+Output [2]: [stars#3, year(cast(date#8 as date)) AS year#10]
+Input [2]: [stars#3, date#8]
+
+(4) HashAggregate
+Input [2]: [stars#3, year#10]
+Keys [1]: [year#10]
+Functions [1]: [partial_avg(stars#3)]
+Aggregate Attributes [2]: [sum#23, count#24L]
+Results [3]: [year#10, sum#25, count#26L]
+
+(5) Exchange
+Input [3]: [year#10, sum#25, count#26L]
+Arguments: hashpartitioning(year#10, 200), ENSURE_REQUIREMENTS, [plan_id=19]
+
+(6) HashAggregate
+Input [3]: [year#10, sum#25, count#26L]
+Keys [1]: [year#10]
+Functions [1]: [avg(stars#3)]
+Aggregate Attributes [1]: [avg(stars#3)#22]
+Results [2]: [year#10, avg(stars#3)#22 AS avg_stars#11]
+
+(7) Exchange
+Input [2]: [year#10, avg_stars#11]
+Arguments: rangepartitioning(year#10 ASC NULLS FIRST, 200), ENSURE_REQUIREMENTS, [plan_id=22]
+
+(8) Sort
+Input [2]: [year#10, avg_stars#11]
+Arguments: [year#10 ASC NULLS FIRST], true, 0
+
+(9) AdaptiveSparkPlan
+Output [2]: [year#10, avg_stars#11]
+Arguments: isFinalPlan=false
+
+
