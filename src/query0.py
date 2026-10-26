@@ -8,7 +8,7 @@ from pyspark.sql.types import StructType, StructField, StringType, DoubleType, I
 def main():
     parser = argparse.ArgumentParser(description="Run just 1 variant for query0.")
     parser.add_argument("variant", type=str, help="Select json-infer, json-schema or parquet.")
-    parser.add_argument("--explain-only", action="store_true", help="Set to 1 to run only the explains for PushedFilters, PartitionFilters.")
+    parser.add_argument("--explain-only", action="store_true", help="Use to run only the explains for PushedFilters, PartitionFilters.")
     args = parser.parse_args()
 
     spark = SparkSession.builder.appName("Query0_Schema_" + args.variant).getOrCreate()
